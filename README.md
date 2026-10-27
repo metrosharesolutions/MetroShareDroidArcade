@@ -4,6 +4,12 @@ A retro arcade puzzle game for Android, inspired by the falling-jewel puzzlers o
 and early 90s. Neon synthwave visuals, chiptune music and sound effects generated in code, big
 on-screen arcade buttons, and levels that never end.
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/metrosharesolutions/MetroShareDroidArcade/ci-screenshots/01_title.png" width="240" alt="Title screen">
+  <img src="https://raw.githubusercontent.com/metrosharesolutions/MetroShareDroidArcade/ci-screenshots/02_game.png" width="240" alt="Gameplay">
+  <img src="https://raw.githubusercontent.com/metrosharesolutions/MetroShareDroidArcade/ci-screenshots/07_scores.png" width="240" alt="High scores">
+</p>
+
 ## Download
 
 **Latest APK:** https://github.com/metrosharesolutions/MetroShareDroidArcade/releases/latest/download/GemDrop.apk

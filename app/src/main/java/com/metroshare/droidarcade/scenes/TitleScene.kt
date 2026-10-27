@@ -111,7 +111,7 @@ class TitleScene(app: ArcadeApp) : Scene(app) {
             val sy = logoY - 70f + k * 70f + bob
             sparkle(c, sx, sy, 22f * (0.5f + phase), a)
         }
-        Gfx.glowText(c, "DROID  ARCADE", app.vw / 2f, logoY + 230f + bob, 30f, Gfx.PINK, Gfx.MAGENTA)
+        Gfx.outlineText(c, "DROID ARCADE", app.vw / 2f, logoY + 236f + bob, 34f, Gfx.CYAN, shadow = 4f)
 
         buttons.draw(c, t)
         buttons.buttons.getOrNull(focus)?.let { if (usingKeys) it.draw(c, t, highlight = true) }

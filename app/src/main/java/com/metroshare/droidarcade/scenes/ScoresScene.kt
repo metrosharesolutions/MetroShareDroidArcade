@@ -2,6 +2,7 @@ package com.metroshare.droidarcade.scenes
 
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.RectF
 import android.view.KeyEvent
 import com.metroshare.droidarcade.ArcadeApp
 import com.metroshare.droidarcade.Scene
@@ -17,6 +18,7 @@ class ScoresScene(app: ArcadeApp, private val highlight: Int = -1) : Scene(app) 
     private val buttons = ButtonGroup()
     private var rowTop = 0f
     private var rowH = 62f
+    private val tableRect = RectF()
 
     init {
         buttons.add(NeonButton("PLAY", Gfx.YELLOW) {
@@ -60,6 +62,9 @@ class ScoresScene(app: ArcadeApp, private val highlight: Int = -1) : Scene(app) 
             x += Gfx.measure(ch.toString(), size)
         }
 
+        tableRect.set(24f, rowTop - 78f, app.vw - 24f, rowTop + 10.2f * rowH)
+        Gfx.panel(c, tableRect, 16f, 0xD90A0018.toInt(), Gfx.PURPLE)
+
         val hy = rowTop - 34f
         Gfx.glowText(c, "RANK", 50f, hy, 20f, Gfx.CYAN, align = Paint.Align.LEFT)
         Gfx.glowText(c, "NAME", 230f, hy, 20f, Gfx.CYAN, align = Paint.Align.LEFT)
@@ -81,7 +86,7 @@ class ScoresScene(app: ArcadeApp, private val highlight: Int = -1) : Scene(app) 
         }
         if (highlight < 0 && app.scores.entries.isNotEmpty()) {
             val blink = ((t * 1.5f).toInt() % 2) == 0
-            if (blink) Gfx.glowText(c, "CAN YOU BEAT THEM?", cx, rowTop + 10.5f * rowH, 18f, Gfx.YELLOW, Gfx.ORANGE)
+            if (blink) Gfx.glowText(c, "CAN YOU BEAT THEM?", cx, tableRect.bottom + 44f, 18f, Gfx.YELLOW, Gfx.ORANGE)
         }
         buttons.draw(c, t)
     }

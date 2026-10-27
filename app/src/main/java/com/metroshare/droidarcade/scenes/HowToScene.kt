@@ -104,7 +104,7 @@ class HowToScene(app: ArcadeApp) : Scene(app) {
             }
         }
 
-        Gfx.glowText(c, "CONTROLS", app.vw / 2f, panel.bottom + 34f, 22f, Gfx.PINK)
+        Gfx.glowText(c, "CONTROLS", app.vw / 2f, panel.bottom + 42f, 22f, Gfx.PINK)
         for ((b, label) in mini) {
             b.draw(c, showLabel = false)
             if (label.isNotEmpty()) {
