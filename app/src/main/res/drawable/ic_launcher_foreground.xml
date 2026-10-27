@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Three stacked gems: ruby, topaz, sapphire. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:fillColor="#FF7A0F2A" android:pathData="M54,22L67,33L54,44L41,33Z" />
+    <path android:fillColor="#FFFF2D55" android:pathData="M54,25L64,33L54,41L44,33Z" />
+    <path android:fillColor="#FFFFA3B8" android:pathData="M54,25L44,33L54,33Z" />
+
+    <path android:fillColor="#FF7A6200" android:pathData="M54,43L67,54L54,65L41,54Z" />
+    <path android:fillColor="#FFFFDD33" android:pathData="M54,46L64,54L54,62L44,54Z" />
+    <path android:fillColor="#FFFFF4B3" android:pathData="M54,46L44,54L54,54Z" />
+
+    <path android:fillColor="#FF0D2E66" android:pathData="M54,64L67,75L54,86L41,75Z" />
+    <path android:fillColor="#FF2F8CFF" android:pathData="M54,67L64,75L54,83L44,75Z" />
+    <path android:fillColor="#FFA8D0FF" android:pathData="M54,67L44,75L54,75Z" />
+
+    <path android:fillColor="#FFFFFFFF" android:pathData="M70,24L71.2,28.8L76,30L71.2,31.2L70,36L68.8,31.2L64,30L68.8,28.8Z" />
+</vector>

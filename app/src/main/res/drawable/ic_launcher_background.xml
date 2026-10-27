@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Outrun sunset: gradient sky, striped sun, neon floor grid. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:pathData="M0,0h108v74h-108z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:endX="0"
+                android:endY="74"
+                android:startX="0"
+                android:startY="0"
+                android:type="linear">
+                <item android:color="#FF0B0033" android:offset="0" />
+                <item android:color="#FFB0177A" android:offset="1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:pathData="M54,74m-30,0a30,30 0,1 1,60 0z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:endX="0"
+                android:endY="74"
+                android:startX="0"
+                android:startY="44"
+                android:type="linear">
+                <item android:color="#FFFFE66B" android:offset="0" />
+                <item android:color="#FFFF2A6D" android:offset="1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:fillColor="#FF8A1466" android:pathData="M20,60h68v1.6h-68zM20,65h68v2.2h-68zM20,70h68v2.8h-68z" />
+    <path android:fillColor="#FF12002B" android:pathData="M0,74h108v34h-108z" />
+    <path
+        android:pathData="M0,74H108M0,79H108M0,86H108M0,96H108M54,74L54,108M54,74L30,108M54,74L6,108M54,74L78,108M54,74L102,108M54,74L-20,108M54,74L128,108"
+        android:strokeWidth="1.2"
+        android:strokeColor="#FFFF2A9D" />
+</vector>

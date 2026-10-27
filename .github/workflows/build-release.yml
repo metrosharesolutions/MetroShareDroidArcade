@@ -1,0 +1,182 @@
+name: Build, Merge & Release APK
+
+# claude/** branches: build + test, then merge into main and start a release run on main.
+# main (push or manual run): build + test, then publish a signed GemDrop.apk as a GitHub Release.
+on:
+  push:
+    branches: [main, 'claude/**']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    # Weekly touch of the cached signing key so GitHub never evicts it (7-day idle limit).
+    - cron: '17 6 * * 1'
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: build-release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  KEY_CACHE_PATH: ~/.gemdrop/release.keystore
+  KEY_CACHE_KEY: gem-drop-signing-key-v1
+
+jobs:
+  build:
+    name: Build & test
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Unit tests + release build
+        run: ./gradlew --no-daemon testDebugUnitTest --tests 'com.metroshare.droidarcade.game.*' assembleRelease -PversionCode=${{ github.run_number }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GemDrop-ci-build
+          path: app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+
+  merge:
+    name: Auto-merge into main
+    needs: build
+    if: github.event_name == 'push' && startsWith(github.ref_name, 'claude/')
+    runs-on: ubuntu-latest
+    concurrency:
+      group: merge-main
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Merge ${{ github.ref_name }}
+        id: merge
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin "$GITHUB_SHA"
+          if git merge-base --is-ancestor "$GITHUB_SHA" HEAD; then
+            echo "main already contains $GITHUB_SHA"
+            echo "merged=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! git merge --ff-only "$GITHUB_SHA"; then
+            git merge --no-ff --no-edit "$GITHUB_SHA" -m "Auto-merge ${GITHUB_REF_NAME} into main"
+          fi
+          git push origin HEAD:main
+          echo "merged=true" >> "$GITHUB_OUTPUT"
+
+      # Pushes made with GITHUB_TOKEN do not start new runs, but a workflow_dispatch does.
+      - name: Start release run on main
+        if: steps.merge.outputs.merged == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run build-release.yml --repo "$GITHUB_REPOSITORY" --ref main
+
+  release:
+    name: Publish release
+    needs: build
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    concurrency:
+      group: release-main
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Restore signing key
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.KEY_CACHE_PATH }}
+          key: ${{ env.KEY_CACHE_KEY }}
+
+      - name: Prepare signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "Using the keystore from repository secrets"
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+            echo "SIGNING_KEYSTORE_PATH=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          KS="$HOME/.gemdrop/release.keystore"
+          if [ ! -f "$KS" ]; then
+            echo "No cached key yet: generating one (kept in the Actions cache from now on)"
+            mkdir -p "$(dirname "$KS")"
+            keytool -genkeypair -keystore "$KS" -storetype PKCS12 -alias androiddebugkey \
+              -keyalg RSA -keysize 2048 -validity 36500 -storepass android -keypass android \
+              -dname "CN=Android Debug,O=Android,C=US"
+            echo "NEW_KEY=true" >> "$GITHUB_ENV"
+          fi
+          echo "SIGNING_KEYSTORE_PATH=$KS" >> "$GITHUB_ENV"
+
+      - name: Save new signing key
+        if: env.NEW_KEY == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.KEY_CACHE_PATH }}
+          key: ${{ env.KEY_CACHE_KEY }}
+
+      - name: Build signed release APK
+        env:
+          # Cached key uses the standard Android debug-key passwords; secrets override them.
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD || 'android' }}
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS || 'androiddebugkey' }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD || 'android' }}
+        run: |
+          ./gradlew --no-daemon assembleRelease -PversionCode=${{ github.run_number }}
+          cp app/build/outputs/apk/release/app-release.apk GemDrop.apk
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="1.0.${{ github.run_number }}"
+          SUBJECT="$(git log -1 --format=%s)"
+          {
+            echo "## Gem Drop v$VERSION"
+            echo
+            echo "Download **GemDrop.apk** below and open it on your Android phone to install or update."
+            echo
+            echo "Always-newest link: https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/GemDrop.apk"
+            echo
+            echo "Latest change: $SUBJECT"
+            echo
+            echo "Commit: ${GITHUB_SHA}"
+          } > notes.md
+          gh release create "v$VERSION" GemDrop.apk \
+            --target "$GITHUB_SHA" \
+            --title "Gem Drop v$VERSION" \
+            --notes-file notes.md \
+            --latest
+
+  keep-key-alive:
+    name: Keep signing key cached
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.KEY_CACHE_PATH }}
+          key: ${{ env.KEY_CACHE_KEY }}
