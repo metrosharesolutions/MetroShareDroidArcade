@@ -34,7 +34,11 @@ class MainActivity : Activity() {
 
     private fun hideSystemBars() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            window.setDecorFitsSystemWindows(false)
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+                // Edge-to-edge is automatic from Android 15 on.
+                @Suppress("DEPRECATION")
+                window.setDecorFitsSystemWindows(false)
+            }
             window.insetsController?.let {
                 it.hide(WindowInsets.Type.systemBars())
                 it.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
